@@ -12,43 +12,204 @@ body {
 
 header {
     background: white;
-    padding: 20px;
+    padding: 15px 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-h1 {
-    font-size: 24px;
-    color: #2c3e50;
-}
-
-.header-actions {
+.header-left {
     display: flex;
-    gap: 10px;
+    align-items: center;
+    gap: 15px;
 }
 
-select, button {
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    background: white;
-}
-
-button {
-    background: #3498db;
-    color: white;
+.menu-hamburger {
+    background: none;
     border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
     transition: background 0.3s;
 }
 
-button:hover {
-    background: #2980b9;
+.menu-hamburger:hover {
+    background: #f0f0f0;
 }
+
+h1 {
+    font-size: 20px;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.btn-excel {
+    background: #1D6F42;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.3s;
+}
+
+.btn-excel:hover {
+    background: #155d35;
+}
+
+.btn-excel svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    left: -280px;
+    top: 0;
+    width: 280px;
+    height: 100%;
+    background: white;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    transition: left 0.3s;
+    z-index: 1001;
+    overflow-y: auto;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #ecf0f1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-header h2 {
+    font-size: 18px;
+    margin: 0;
+    color: #2c3e50;
+}
+
+.sidebar-header button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #7f8c8d;
+    padding: 5px;
+}
+
+.sidebar-nav {
+    padding: 10px 0;
+}
+
+.sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 20px;
+    color: #2c3e50;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+.sidebar-nav a:hover {
+    background: #f8f9fa;
+}
+
+.sidebar-nav a span {
+    font-size: 20px;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    z-index: 1000;
+}
+
+.overlay.active {
+    display: block;
+}
+
+/* Competências Gallery */
+.competencias-gallery {
+    background: white;
+    border-bottom: 1px solid #ecf0f1;
+    padding: 15px 0;
+    overflow-x: auto;
+}
+
+.gallery-scroll {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.gallery-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.gallery-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.gallery-scroll::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.competencia-card {
+    min-width: 150px;
+    padding: 12px 20px;
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.competencia-card:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.competencia-card.active {
+    background: #3498db;
+    color: white;
+    border-color: #2980b9;
+}
+
+.competencia-card .mes {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.competencia-card .ano {
+    font-size: 12px;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
 
 /* Kanban Board */
 .kanban-board {
@@ -58,6 +219,126 @@ button:hover {
     padding: 20px;
     max-width: 1400px;
     margin: 0 auto;
+}
+
+/* Gerenciar Page */
+.gerenciar-page {
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.gerenciar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.gerenciar-header h2 {
+    font-size: 24px;
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* Buttons */
+button, .btn-primary, .btn-secondary, .btn-danger {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+/* Table */
+.empresas-table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow-x: auto;
+}
+
+.empresas-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.empresas-table thead {
+    background: #f8f9fa;
+}
+
+.empresas-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.empresas-table td {
+    padding: 15px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.empresas-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.empresas-table .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-badge.ativo {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.inativo {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.table-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.table-actions button {
+    padding: 6px 12px;
+    font-size: 12px;
 }
 
 .coluna {
@@ -143,7 +424,7 @@ button:hover {
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 2000;
     left: 0;
     top: 0;
     width: 100%;
@@ -153,12 +434,13 @@ button:hover {
 
 .modal-content {
     background: white;
-    margin: 10% auto;
+    margin: 8% auto;
     padding: 30px;
-    border-radius: 8px;
+    border-radius: 12px;
     width: 90%;
     max-width: 500px;
     position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
 
 .close {
@@ -169,6 +451,7 @@ button:hover {
     font-weight: bold;
     color: #aaa;
     cursor: pointer;
+    transition: color 0.3s;
 }
 
 .close:hover {
@@ -176,44 +459,51 @@ button:hover {
 }
 
 .modal-content h2 {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     color: #2c3e50;
+    font-size: 22px;
 }
 
-.modal-content input {
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #2c3e50;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
     width: 100%;
     padding: 12px;
-    margin-bottom: 15px;
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.form-group input:disabled {
+    background: #f8f9fa;
+    color: #7f8c8d;
+    cursor: not-allowed;
 }
 
 .modal-content button {
     width: 100%;
     padding: 12px;
     font-size: 16px;
-}
-
-/* Lista de Empresas */
-.empresa-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    margin-bottom: 8px;
-    background: #f8f9fa;
-    border-radius: 6px;
-}
-
-.empresa-item.inativa {
-    opacity: 0.5;
-}
-
-.empresa-actions button {
-    padding: 6px 12px;
-    margin-left: 8px;
-    font-size: 12px;
+    margin-top: 10px;
 }
 
 /* Responsivo */
@@ -222,18 +512,40 @@ button:hover {
         grid-template-columns: 1fr;
     }
     
-    header {
+    h1 {
+        font-size: 16px;
+    }
+    
+    .competencias-gallery {
+        padding: 10px 0;
+    }
+    
+    .competencia-card {
+        min-width: 120px;
+    }
+    
+    .gerenciar-page {
+        padding: 15px;
+    }
+    
+    .gerenciar-header {
         flex-direction: column;
         gap: 15px;
+        align-items: flex-start;
     }
     
-    .header-actions {
-        flex-wrap: wrap;
+    .empresas-table-container {
+        overflow-x: scroll;
+    }
+    
+    .empresas-table {
+        min-width: 600px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
         width: 100%;
-    }
-    
-    .header-actions button,
-    .header-actions select {
-        flex: 1;
+        left: -100%;
     }
 }
