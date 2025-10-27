@@ -12,9 +12,30 @@ let viewAtual = 'kanban';
 // ===================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await carregarDados();
-    carregarCompetenciasGallery();
-    renderizarKanban();
+    console.log('🚀 Portal iniciando...');
+    
+    try {
+        // 1. Carregar dados
+        console.log('📦 Carregando dados...');
+        await carregarDados();
+        console.log('✓ Dados carregados:', empresas.length, 'empresas');
+        
+        // 2. Carregar galeria de competências
+        console.log('📅 Carregando competências...');
+        carregarCompetenciasGallery();
+        const cards = document.querySelectorAll('.competencia-card');
+        console.log('✓ Competências carregadas:', cards.length, 'cards');
+        
+        // 3. Renderizar kanban
+        console.log('📋 Renderizando kanban...');
+        renderizarKanban();
+        console.log('✓ Kanban renderizado');
+        
+        console.log('✅ Portal pronto!');
+    } catch (error) {
+        console.error('❌ Erro ao inicializar:', error);
+        alert('Erro ao carregar o portal. Veja o console (F12) para detalhes.');
+    }
 });
 
 // ===================================
@@ -108,6 +129,12 @@ function abrirGerenciarEmpresas() {
 
 function carregarCompetenciasGallery() {
     const gallery = document.getElementById('competenciasGallery');
+    
+    if (!gallery) {
+        console.error('❌ Elemento competenciasGallery não encontrado!');
+        return;
+    }
+    
     gallery.innerHTML = '';
     
     const dataAtual = new Date();
@@ -127,11 +154,16 @@ function carregarCompetenciasGallery() {
         });
     }
     
-    competencias.forEach(comp => {
+    console.log('📅 Criando', competencias.length, 'cards de competência');
+    
+    competencias.forEach((comp, index) => {
         const card = document.createElement('div');
         card.className = 'competencia-card';
+        card.dataset.competencia = comp.valor;
+        
         if (comp.valor === competenciaAtual) {
             card.classList.add('active');
+            console.log('✓ Competência ativa:', comp.mes, comp.ano);
         }
         
         card.innerHTML = `
@@ -139,23 +171,43 @@ function carregarCompetenciasGallery() {
             <div class="ano">${comp.ano}</div>
         `;
         
-        card.onclick = () => selecionarCompetencia(comp.valor);
+        card.addEventListener('click', function() {
+            console.log('👆 Clicou em:', comp.mes, comp.ano);
+            selecionarCompetencia(comp.valor);
+        });
+        
         gallery.appendChild(card);
     });
+    
+    console.log('✓ Gallery renderizada com', gallery.children.length, 'cards');
 }
 
 function selecionarCompetencia(competencia) {
+    console.log('🔄 Alterando competência para:', competencia);
     competenciaAtual = competencia;
     
     // Atualizar cards ativos
+    let encontrou = false;
     document.querySelectorAll('.competencia-card').forEach(card => {
         card.classList.remove('active');
+        if (card.dataset.competencia === competencia) {
+            card.classList.add('active');
+            encontrou = true;
+        }
     });
-    event.target.closest('.competencia-card').classList.add('active');
+    
+    if (!encontrou) {
+        console.warn('⚠️ Card da competência não encontrado:', competencia);
+    } else {
+        console.log('✓ Card marcado como ativo');
+    }
     
     // Recarregar kanban
     if (viewAtual === 'kanban') {
+        console.log('🔄 Recarregando kanban...');
         renderizarKanban();
+    } else {
+        console.log('ℹ️ Kanban não visível, pulando renderização');
     }
 }
 
