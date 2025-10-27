@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Fechamento NF</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>📋 Portal de Fechamento NF</h1>
+        <div class="header-actions">
+            <select id="competencia">
+                <option value="2024-10">Outubro/2024</option>
+                <option value="2024-11">Novembro/2024</option>
+                <option value="2024-12">Dezembro/2024</option>
+            </select>
+            <button onclick="abrirModalEmpresa()">➕ Nova Empresa</button>
+            <button onclick="exportarExcel()">📥 Exportar Excel</button>
+            <button onclick="abrirGerenciarEmpresas()">⚙️ Gerenciar</button>
+        </div>
+    </header>
+
+    <main class="kanban-board">
+        <!-- Coluna Pendente -->
+        <div class="coluna" data-status="pendente">
+            <div class="coluna-header">
+                <h2>Pendente</h2>
+                <span class="contador" id="count-pendente">0</span>
+            </div>
+            <div class="cards-container" id="pendente" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <!-- Cards serão inseridos aqui -->
+            </div>
+        </div>
+
+        <!-- Coluna Em Andamento -->
+        <div class="coluna" data-status="em-andamento">
+            <div class="coluna-header">
+                <h2>Em Andamento</h2>
+                <span class="contador" id="count-em-andamento">0</span>
+            </div>
+            <div class="cards-container" id="em-andamento" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <!-- Cards serão inseridos aqui -->
+            </div>
+        </div>
+
+        <!-- Coluna Concluído -->
+        <div class="coluna" data-status="concluido">
+            <div class="coluna-header">
+                <h2>Concluído</h2>
+                <span class="contador" id="count-concluido">0</span>
+            </div>
+            <div class="cards-container" id="concluido" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <!-- Cards serão inseridos aqui -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Nova Empresa -->
+    <div id="modalEmpresa" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalEmpresa()">&times;</span>
+            <h2>Adicionar Nova Empresa</h2>
+            <input type="text" id="codigoEmpresa" placeholder="Código da empresa (ex: EMP001)" />
+            <button onclick="adicionarEmpresa()">Adicionar</button>
+        </div>
+    </div>
+
+    <!-- Modal Gerenciar Empresas -->
+    <div id="modalGerenciar" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharGerenciarEmpresas()">&times;</span>
+            <h2>Gerenciar Empresas</h2>
+            <div id="listaEmpresas"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
