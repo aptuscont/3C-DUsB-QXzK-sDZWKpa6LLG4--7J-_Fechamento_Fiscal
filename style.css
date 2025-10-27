@@ -154,60 +154,96 @@ h1 {
     border-bottom: 1px solid #ecf0f1;
     padding: 15px 0;
     overflow-x: auto;
+    overflow-y: hidden;
+    position: relative;
+}
+
+.competencias-gallery::after {
+    content: '→';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: #bdc3c7;
+    pointer-events: none;
+    opacity: 0.5;
 }
 
 .gallery-scroll {
     display: flex;
-    gap: 10px;
+    flex-direction: row;
+    gap: 12px;
     padding: 0 20px;
     overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
     scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+    -webkit-overflow-scrolling: touch;
 }
 
 .gallery-scroll::-webkit-scrollbar {
-    height: 6px;
+    height: 8px;
 }
 
 .gallery-scroll::-webkit-scrollbar-track {
     background: #f1f1f1;
+    border-radius: 4px;
 }
 
 .gallery-scroll::-webkit-scrollbar-thumb {
     background: #888;
-    border-radius: 3px;
+    border-radius: 4px;
+}
+
+.gallery-scroll::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 .competencia-card {
-    min-width: 150px;
-    padding: 12px 20px;
+    flex: 0 0 auto;
+    min-width: 130px;
+    width: 130px;
+    padding: 12px 16px;
     background: #f8f9fa;
-    border: 2px solid transparent;
+    border: 2px solid #e9ecef;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s;
     text-align: center;
+    user-select: none;
 }
 
 .competencia-card:hover {
     background: #e9ecef;
     transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-color: #dee2e6;
 }
 
 .competencia-card.active {
     background: #3498db;
     color: white;
     border-color: #2980b9;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.competencia-card.active:hover {
+    background: #2980b9;
 }
 
 .competencia-card .mes {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: bold;
+    display: block;
 }
 
 .competencia-card .ano {
     font-size: 12px;
     opacity: 0.8;
     margin-top: 4px;
+    display: block;
 }
 
 
@@ -520,8 +556,23 @@ button, .btn-primary, .btn-secondary, .btn-danger {
         padding: 10px 0;
     }
     
+    .gallery-scroll {
+        padding: 0 10px;
+        gap: 8px;
+    }
+    
     .competencia-card {
-        min-width: 120px;
+        min-width: 110px;
+        width: 110px;
+        padding: 10px 12px;
+    }
+    
+    .competencia-card .mes {
+        font-size: 13px;
+    }
+    
+    .competencia-card .ano {
+        font-size: 11px;
     }
     
     .gerenciar-page {
@@ -534,6 +585,10 @@ button, .btn-primary, .btn-secondary, .btn-danger {
         align-items: flex-start;
     }
     
+    .gerenciar-header button {
+        width: 100%;
+    }
+    
     .empresas-table-container {
         overflow-x: scroll;
     }
@@ -541,11 +596,29 @@ button, .btn-primary, .btn-secondary, .btn-danger {
     .empresas-table {
         min-width: 600px;
     }
+    
+    .table-actions {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .table-actions button {
+        width: 100%;
+    }
 }
 
 @media (max-width: 480px) {
     .sidebar {
         width: 100%;
         left: -100%;
+    }
+    
+    .header-left h1 {
+        font-size: 14px;
+    }
+    
+    .menu-hamburger {
+        padding: 6px 10px;
+        font-size: 20px;
     }
 }
