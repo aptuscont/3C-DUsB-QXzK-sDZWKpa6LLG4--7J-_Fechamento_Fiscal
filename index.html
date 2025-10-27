@@ -7,21 +7,51 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Header -->
     <header>
-        <h1>📋 Portal de Fechamento NF</h1>
-        <div class="header-actions">
-            <select id="competencia">
-                <option value="2024-10">Outubro/2024</option>
-                <option value="2024-11">Novembro/2024</option>
-                <option value="2024-12">Dezembro/2024</option>
-            </select>
-            <button onclick="abrirModalEmpresa()">➕ Nova Empresa</button>
-            <button onclick="exportarExcel()">📥 Exportar Excel</button>
-            <button onclick="abrirGerenciarEmpresas()">⚙️ Gerenciar</button>
+        <div class="header-left">
+            <button class="menu-hamburger" onclick="toggleMenu()">☰</button>
+            <h1>Portal de Fechamento NF</h1>
         </div>
+        <button class="btn-excel" onclick="exportarExcel()" title="Exportar para Excel">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+        </button>
     </header>
 
-    <main class="kanban-board">
+    <!-- Sidebar Menu -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Menu</h2>
+            <button onclick="toggleMenu()">✕</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" onclick="voltarKanban()">
+                <span>📋</span> Kanban
+            </a>
+            <a href="#" onclick="abrirGerenciarEmpresas()">
+                <span>⚙️</span> Gerenciar Códigos
+            </a>
+        </nav>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+    <!-- Galeria de Competências -->
+    <div class="competencias-gallery">
+        <div class="gallery-scroll" id="competenciasGallery">
+            <!-- Competências serão inseridas aqui -->
+        </div>
+    </div>
+
+    <!-- View: Kanban -->
+    <main class="kanban-board" id="viewKanban">
         <!-- Coluna Pendente -->
         <div class="coluna" data-status="pendente">
             <div class="coluna-header">
@@ -56,25 +86,80 @@
         </div>
     </main>
 
+    <!-- View: Gerenciar Empresas -->
+    <div class="gerenciar-page" id="viewGerenciar" style="display: none;">
+        <div class="gerenciar-header">
+            <h2>Gerenciar Códigos de Empresas</h2>
+            <button class="btn-primary" onclick="abrirModalNovaEmpresa()">➕ Adicionar Nova Empresa</button>
+        </div>
+        
+        <div class="empresas-table-container">
+            <table class="empresas-table" id="tabelaEmpresas">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Competência Inicial</th>
+                        <th>Status</th>
+                        <th>Data Criação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaEmpresasBody">
+                    <!-- Linhas serão inseridas aqui -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Modal Nova Empresa -->
-    <div id="modalEmpresa" class="modal">
+    <div id="modalNovaEmpresa" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="fecharModalEmpresa()">&times;</span>
+            <span class="close" onclick="fecharModalNovaEmpresa()">&times;</span>
             <h2>Adicionar Nova Empresa</h2>
-            <input type="text" id="codigoEmpresa" placeholder="Código da empresa (ex: EMP001)" />
-            <button onclick="adicionarEmpresa()">Adicionar</button>
+            
+            <div class="form-group">
+                <label>Código da Empresa *</label>
+                <input type="text" id="codigoEmpresa" placeholder="Ex: EMP001" />
+            </div>
+            
+            <div class="form-group">
+                <label>Iniciar a partir de qual competência? *</label>
+                <select id="competenciaInicial">
+                    <!-- Opções serão inseridas aqui -->
+                </select>
+            </div>
+            
+            <button class="btn-primary" onclick="adicionarEmpresa()">Adicionar</button>
         </div>
     </div>
 
-    <!-- Modal Gerenciar Empresas -->
-    <div id="modalGerenciar" class="modal">
+    <!-- Modal Editar Empresa -->
+    <div id="modalEditarEmpresa" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="fecharGerenciarEmpresas()">&times;</span>
-            <h2>Gerenciar Empresas</h2>
-            <div id="listaEmpresas"></div>
+            <span class="close" onclick="fecharModalEditarEmpresa()">&times;</span>
+            <h2>Editar Empresa</h2>
+            
+            <div class="form-group">
+                <label>Código da Empresa</label>
+                <input type="text" id="editarCodigo" disabled />
+            </div>
+            
+            <div class="form-group">
+                <label>Competência Inicial</label>
+                <select id="editarCompetenciaInicial">
+                    <!-- Opções serão inseridas aqui -->
+                </select>
+            </div>
+            
+            <input type="hidden" id="editarEmpresaId" />
+            <button class="btn-primary" onclick="salvarEdicaoEmpresa()">Salvar Alterações</button>
         </div>
     </div>
 
+    <!-- ExcelJS Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    
+    <!-- App Script -->
     <script src="app.js"></script>
 </body>
 </html>
