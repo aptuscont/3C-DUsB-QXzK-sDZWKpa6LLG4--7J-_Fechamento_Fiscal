@@ -1,31 +1,241 @@
 // ===================================
-// DADOS E CONFIGURAÇÃO
+// CONFIGURAÇÃO E VARIÁVEIS GLOBAIS
 // ===================================
 
-let empresas = JSON.parse(localStorage.getItem('empresas')) || [];
-let fechamentos = JSON.parse(localStorage.getItem('fechamentos')) || [];
-let competenciaAtual = '2024-10';
+let empresas = [];
+let fechamentos = [];
+let competenciaAtual = null;
+let viewAtual = 'kanban';
 
 // ===================================
 // INICIALIZAÇÃO
 // ===================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    carregarCompetencias();
+document.addEventListener('DOMContentLoaded', async () => {
+    await carregarDados();
+    carregarCompetenciasGallery();
     renderizarKanban();
-    
-    document.getElementById('competencia').addEventListener('change', (e) => {
-        competenciaAtual = e.target.value;
-        renderizarKanban();
-    });
 });
 
 // ===================================
-// GERENCIAR EMPRESAS
+// GERENCIAMENTO DE DADOS (JSON)
 // ===================================
+
+async function carregarDados() {
+    try {
+        // Tenta carregar do localStorage primeiro
+        const empresasLocal = localStorage.getItem('empresas');
+        const fechamentosLocal = localStorage.getItem('fechamentos');
+        
+        if (empresasLocal && fechamentosLocal) {
+            empresas = JSON.parse(empresasLocal);
+            fechamentos = JSON.parse(fechamentosLocal);
+        } else {
+            // Dados iniciais vazios
+            empresas = [];
+            fechamentos = [];
+        }
+        
+        // Define competência atual (mês atual)
+        if (!competenciaAtual) {
+            const hoje = new Date();
+            competenciaAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+        }
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        empresas = [];
+        fechamentos = [];
+    }
+}
+
+function salvarDados() {
+    try {
+        // Salvar no localStorage
+        localStorage.setItem('empresas', JSON.stringify(empresas));
+        localStorage.setItem('fechamentos', JSON.stringify(fechamentos));
+        
+        // Criar arquivos JSON para download/commit (opcional)
+        downloadJSON('empresas', empresas);
+        downloadJSON('fechamentos', fechamentos);
+        
+        console.log('✓ Dados salvos:', empresas.length, 'empresas,', fechamentos.length, 'fechamentos');
+    } catch (error) {
+        console.error('Erro ao salvar dados:', error);
+        alert('Erro ao salvar dados!');
+    }
+}
+
+function downloadJSON(nome, dados) {
+    // Esta função cria os arquivos JSON que podem ser commitados no repositório
+    const dataStr = JSON.stringify(dados, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    // Para commitar no git, você pode copiar esses arquivos para a pasta /data
+    console.log(`JSON ${nome}.json criado:`, dados.length, 'registros');
+}
+
+// ===================================
+// MENU SIDEBAR
+// ===================================
+
+function toggleMenu() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function voltarKanban() {
+    document.getElementById('viewGerenciar').style.display = 'none';
+    document.getElementById('viewKanban').style.display = 'grid';
+    viewAtual = 'kanban';
+    toggleMenu();
+    renderizarKanban();
+}
+
+function abrirGerenciarEmpresas() {
+    document.getElementById('viewKanban').style.display = 'none';
+    document.getElementById('viewGerenciar').style.display = 'block';
+    viewAtual = 'gerenciar';
+    toggleMenu();
+    renderizarTabelaEmpresas();
+}
+
+// ===================================
+// GALERIA DE COMPETÊNCIAS
+// ===================================
+
+function carregarCompetenciasGallery() {
+    const gallery = document.getElementById('competenciasGallery');
+    gallery.innerHTML = '';
+    
+    const dataAtual = new Date();
+    const competencias = [];
+    
+    // Gerar últimos 12 meses
+    for (let i = 0; i < 12; i++) {
+        const data = new Date(dataAtual.getFullYear(), dataAtual.getMonth() - i, 1);
+        const mes = data.getMonth() + 1;
+        const ano = data.getFullYear();
+        const valor = `${ano}-${String(mes).padStart(2, '0')}`;
+        
+        competencias.push({
+            valor: valor,
+            mes: getNomeMes(mes),
+            ano: ano
+        });
+    }
+    
+    competencias.forEach(comp => {
+        const card = document.createElement('div');
+        card.className = 'competencia-card';
+        if (comp.valor === competenciaAtual) {
+            card.classList.add('active');
+        }
+        
+        card.innerHTML = `
+            <div class="mes">${comp.mes}</div>
+            <div class="ano">${comp.ano}</div>
+        `;
+        
+        card.onclick = () => selecionarCompetencia(comp.valor);
+        gallery.appendChild(card);
+    });
+}
+
+function selecionarCompetencia(competencia) {
+    competenciaAtual = competencia;
+    
+    // Atualizar cards ativos
+    document.querySelectorAll('.competencia-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    event.target.closest('.competencia-card').classList.add('active');
+    
+    // Recarregar kanban
+    if (viewAtual === 'kanban') {
+        renderizarKanban();
+    }
+}
+
+// ===================================
+// GERENCIAR EMPRESAS - TABELA
+// ===================================
+
+function renderizarTabelaEmpresas() {
+    const tbody = document.getElementById('tabelaEmpresasBody');
+    tbody.innerHTML = '';
+    
+    if (empresas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma empresa cadastrada</td></tr>';
+        return;
+    }
+    
+    // Ordenar por código
+    const empresasOrdenadas = [...empresas].sort((a, b) => a.codigo.localeCompare(b.codigo));
+    
+    empresasOrdenadas.forEach(empresa => {
+        const tr = document.createElement('tr');
+        
+        const statusBadge = empresa.ativo 
+            ? '<span class="status-badge ativo">Ativo</span>' 
+            : '<span class="status-badge inativo">Inativo</span>';
+        
+        tr.innerHTML = `
+            <td><strong>${empresa.codigo}</strong></td>
+            <td>${formatarCompetencia(empresa.competenciaInicial)}</td>
+            <td>${statusBadge}</td>
+            <td>${formatarData(empresa.createdAt)}</td>
+            <td>
+                <div class="table-actions">
+                    <button class="btn-secondary" onclick="editarEmpresa('${empresa.id}')">Editar</button>
+                    <button class="${empresa.ativo ? 'btn-secondary' : 'btn-primary'}" onclick="toggleEmpresa('${empresa.id}')">
+                        ${empresa.ativo ? 'Desativar' : 'Ativar'}
+                    </button>
+                    <button class="btn-danger" onclick="removerEmpresa('${empresa.id}')">Excluir</button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+    });
+}
+
+// ===================================
+// GERENCIAR EMPRESAS - AÇÕES
+// ===================================
+
+function abrirModalNovaEmpresa() {
+    // Preencher select de competências
+    const select = document.getElementById('competenciaInicial');
+    select.innerHTML = '';
+    
+    const dataAtual = new Date();
+    for (let i = 0; i < 24; i++) {
+        const data = new Date(dataAtual.getFullYear(), dataAtual.getMonth() - i, 1);
+        const mes = data.getMonth() + 1;
+        const ano = data.getFullYear();
+        const valor = `${ano}-${String(mes).padStart(2, '0')}`;
+        
+        const option = document.createElement('option');
+        option.value = valor;
+        option.textContent = formatarCompetencia(valor);
+        select.appendChild(option);
+    }
+    
+    document.getElementById('codigoEmpresa').value = '';
+    document.getElementById('modalNovaEmpresa').style.display = 'block';
+    document.getElementById('codigoEmpresa').focus();
+}
+
+function fecharModalNovaEmpresa() {
+    document.getElementById('modalNovaEmpresa').style.display = 'none';
+}
 
 function adicionarEmpresa() {
     const codigo = document.getElementById('codigoEmpresa').value.trim().toUpperCase();
+    const competenciaInicial = document.getElementById('competenciaInicial').value;
     
     if (!codigo) {
         alert('Digite um código para a empresa');
@@ -33,65 +243,142 @@ function adicionarEmpresa() {
     }
     
     if (empresas.find(e => e.codigo === codigo)) {
-        alert('Empresa já existe!');
+        alert('Empresa com este código já existe!');
         return;
     }
     
-    empresas.push({
-        id: Date.now().toString(),
+    const novaEmpresa = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         codigo: codigo,
+        competenciaInicial: competenciaInicial,
         ativo: true,
         createdAt: new Date().toISOString()
-    });
+    };
+    
+    empresas.push(novaEmpresa);
+    
+    // Criar fechamentos para todas as competências a partir da inicial
+    criarFechamentosIniciais(novaEmpresa);
     
     salvarDados();
-    document.getElementById('codigoEmpresa').value = '';
-    fecharModalEmpresa();
-    renderizarKanban();
+    fecharModalNovaEmpresa();
+    renderizarTabelaEmpresas();
+    
+    alert(`Empresa ${codigo} adicionada com sucesso!`);
 }
 
-function abrirGerenciarEmpresas() {
-    const lista = document.getElementById('listaEmpresas');
-    lista.innerHTML = '';
+function criarFechamentosIniciais(empresa) {
+    const [anoInicial, mesInicial] = empresa.competenciaInicial.split('-').map(Number);
+    const dataAtual = new Date();
+    const mesAtual = dataAtual.getMonth() + 1;
+    const anoAtual = dataAtual.getFullYear();
     
-    empresas.forEach(empresa => {
-        const div = document.createElement('div');
-        div.className = `empresa-item ${!empresa.ativo ? 'inativa' : ''}`;
-        div.innerHTML = `
-            <span><strong>${empresa.codigo}</strong></span>
-            <div class="empresa-actions">
-                <button onclick="toggleEmpresa('${empresa.id}')">
-                    ${empresa.ativo ? 'Desativar' : 'Ativar'}
-                </button>
-                <button onclick="removerEmpresa('${empresa.id}')" style="background: #e74c3c">
-                    Excluir
-                </button>
-            </div>
-        `;
-        lista.appendChild(div);
-    });
+    // Criar fechamentos da competência inicial até o mês atual
+    for (let ano = anoInicial; ano <= anoAtual; ano++) {
+        const mesStart = (ano === anoInicial) ? mesInicial : 1;
+        const mesEnd = (ano === anoAtual) ? mesAtual : 12;
+        
+        for (let mes = mesStart; mes <= mesEnd; mes++) {
+            const competencia = `${ano}-${String(mes).padStart(2, '0')}`;
+            
+            // Verificar se já existe
+            const existe = fechamentos.find(f => 
+                f.empresaId === empresa.id && f.competencia === competencia
+            );
+            
+            if (!existe) {
+                fechamentos.push({
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                    empresaId: empresa.id,
+                    competencia: competencia,
+                    status: 'pendente',
+                    dataInicio: null,
+                    dataConclusao: null,
+                    observacoes: null,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+            }
+        }
+    }
+}
+
+function editarEmpresa(id) {
+    const empresa = empresas.find(e => e.id === id);
+    if (!empresa) return;
     
-    document.getElementById('modalGerenciar').style.display = 'block';
+    // Preencher select
+    const select = document.getElementById('editarCompetenciaInicial');
+    select.innerHTML = '';
+    
+    const dataAtual = new Date();
+    for (let i = 0; i < 24; i++) {
+        const data = new Date(dataAtual.getFullYear(), dataAtual.getMonth() - i, 1);
+        const mes = data.getMonth() + 1;
+        const ano = data.getFullYear();
+        const valor = `${ano}-${String(mes).padStart(2, '0')}`;
+        
+        const option = document.createElement('option');
+        option.value = valor;
+        option.textContent = formatarCompetencia(valor);
+        if (valor === empresa.competenciaInicial) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    }
+    
+    document.getElementById('editarCodigo').value = empresa.codigo;
+    document.getElementById('editarEmpresaId').value = empresa.id;
+    document.getElementById('modalEditarEmpresa').style.display = 'block';
+}
+
+function fecharModalEditarEmpresa() {
+    document.getElementById('modalEditarEmpresa').style.display = 'none';
+}
+
+function salvarEdicaoEmpresa() {
+    const id = document.getElementById('editarEmpresaId').value;
+    const novaCompetenciaInicial = document.getElementById('editarCompetenciaInicial').value;
+    
+    const empresa = empresas.find(e => e.id === id);
+    if (!empresa) return;
+    
+    empresa.competenciaInicial = novaCompetenciaInicial;
+    empresa.updatedAt = new Date().toISOString();
+    
+    // Recriar fechamentos
+    fechamentos = fechamentos.filter(f => f.empresaId !== empresa.id);
+    criarFechamentosIniciais(empresa);
+    
+    salvarDados();
+    fecharModalEditarEmpresa();
+    renderizarTabelaEmpresas();
+    
+    alert('Empresa atualizada com sucesso!');
 }
 
 function toggleEmpresa(id) {
     const empresa = empresas.find(e => e.id === id);
     if (empresa) {
         empresa.ativo = !empresa.ativo;
+        empresa.updatedAt = new Date().toISOString();
         salvarDados();
-        abrirGerenciarEmpresas();
-        renderizarKanban();
+        renderizarTabelaEmpresas();
     }
 }
 
 function removerEmpresa(id) {
-    if (confirm('Tem certeza que deseja excluir esta empresa?')) {
-        empresas = empresas.filter(e => e.id !== id);
-        fechamentos = fechamentos.filter(f => f.empresaId !== id);
-        salvarDados();
-        abrirGerenciarEmpresas();
-        renderizarKanban();
+    if (!confirm('Tem certeza que deseja excluir esta empresa? Todos os fechamentos relacionados serão removidos.')) {
+        return;
     }
+    
+    empresas = empresas.filter(e => e.id !== id);
+    fechamentos = fechamentos.filter(f => f.empresaId !== id);
+    
+    salvarDados();
+    renderizarTabelaEmpresas();
+    
+    alert('Empresa removida com sucesso!');
 }
 
 // ===================================
@@ -109,12 +396,21 @@ function renderizarKanban() {
         let count = 0;
         
         empresasAtivas.forEach(empresa => {
-            const fechamento = obterFechamento(empresa.id, competenciaAtual);
+            // Verificar se empresa deve aparecer nesta competência
+            const [anoInicial, mesInicial] = empresa.competenciaInicial.split('-').map(Number);
+            const [anoAtual, mesAtual] = competenciaAtual.split('-').map(Number);
             
-            if (fechamento.status === status) {
-                const card = criarCard(empresa, fechamento);
-                container.appendChild(card);
-                count++;
+            const dataInicial = new Date(anoInicial, mesInicial - 1);
+            const dataAtualComp = new Date(anoAtual, mesAtual - 1);
+            
+            if (dataAtualComp >= dataInicial) {
+                const fechamento = obterFechamento(empresa.id, competenciaAtual);
+                
+                if (fechamento.status === status) {
+                    const card = criarCard(empresa, fechamento);
+                    container.appendChild(card);
+                    count++;
+                }
             }
         });
         
@@ -129,11 +425,14 @@ function criarCard(empresa, fechamento) {
     card.dataset.empresaId = empresa.id;
     card.dataset.status = fechamento.status;
     
-    const dataInfo = fechamento.dataConclusao 
-        ? `Concluído: ${formatarData(fechamento.dataConclusao)}`
-        : fechamento.dataInicio
-        ? `Iniciado: ${formatarData(fechamento.dataInicio)}`
-        : 'Aguardando';
+    let dataInfo = 'Aguardando';
+    if (fechamento.dataConclusao) {
+        const dias = calcularDiasDecorridos(fechamento.dataInicio, fechamento.dataConclusao);
+        dataInfo = `✓ ${formatarData(fechamento.dataConclusao)} (${dias} dias)`;
+    } else if (fechamento.dataInicio) {
+        const dias = calcularDiasDecorridos(fechamento.dataInicio, new Date().toISOString());
+        dataInfo = `Há ${dias} dias`;
+    }
     
     card.innerHTML = `
         <div class="card-codigo">${empresa.codigo}</div>
@@ -156,13 +455,15 @@ function obterFechamento(empresaId, competencia) {
     
     if (!fechamento) {
         fechamento = {
-            id: Date.now().toString() + Math.random(),
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
             empresaId: empresaId,
             competencia: competencia,
             status: 'pendente',
             dataInicio: null,
             dataConclusao: null,
-            createdAt: new Date().toISOString()
+            observacoes: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
         fechamentos.push(fechamento);
         salvarDados();
@@ -207,7 +508,7 @@ function atualizarStatus(empresaId, novoStatus) {
         f.empresaId === empresaId && f.competencia === competenciaAtual
     );
     
-    if (fechamento) {
+    if (fechamento && fechamento.status !== novoStatus) {
         fechamento.status = novoStatus;
         fechamento.updatedAt = new Date().toISOString();
         
@@ -215,8 +516,14 @@ function atualizarStatus(empresaId, novoStatus) {
             fechamento.dataInicio = new Date().toISOString();
         }
         
-        if (novoStatus === 'concluido') {
+        if (novoStatus === 'concluido' && !fechamento.dataConclusao) {
             fechamento.dataConclusao = new Date().toISOString();
+        }
+        
+        // Se voltar para pendente, limpar datas
+        if (novoStatus === 'pendente') {
+            fechamento.dataInicio = null;
+            fechamento.dataConclusao = null;
         }
         
         salvarDados();
@@ -224,96 +531,122 @@ function atualizarStatus(empresaId, novoStatus) {
 }
 
 // ===================================
-// EXPORTAR EXCEL
+// EXPORTAR EXCEL (ExcelJS)
 // ===================================
 
-function exportarExcel() {
-    const empresasConcluidas = [];
+async function exportarExcel() {
+    if (typeof ExcelJS === 'undefined') {
+        alert('Biblioteca ExcelJS não carregada. Verifique sua conexão com a internet.');
+        return;
+    }
     
-    empresas.filter(e => e.ativo).forEach(empresa => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Fechamentos');
+    
+    // Configurar colunas
+    worksheet.columns = [
+        { header: 'Código', key: 'codigo', width: 15 },
+        { header: 'Competência', key: 'competencia', width: 15 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Data Início', key: 'dataInicio', width: 15 },
+        { header: 'Data Conclusão', key: 'dataConclusao', width: 15 },
+        { header: 'Dias Decorridos', key: 'dias', width: 15 },
+        { header: 'Observações', key: 'observacoes', width: 30 }
+    ];
+    
+    // Estilizar cabeçalho
+    worksheet.getRow(1).font = { bold: true, size: 12 };
+    worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF3498DB' }
+    };
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    
+    // Adicionar dados
+    const empresasAtivas = empresas.filter(e => e.ativo);
+    
+    empresasAtivas.forEach(empresa => {
         const fechamento = fechamentos.find(f => 
-            f.empresaId === empresa.id && 
-            f.competencia === competenciaAtual
+            f.empresaId === empresa.id && f.competencia === competenciaAtual
         );
         
-        if (fechamento && fechamento.status === 'concluido') {
-            empresasConcluidas.push({
+        if (fechamento) {
+            const dias = fechamento.dataInicio && fechamento.dataConclusao
+                ? calcularDiasDecorridos(fechamento.dataInicio, fechamento.dataConclusao)
+                : fechamento.dataInicio
+                ? calcularDiasDecorridos(fechamento.dataInicio, new Date().toISOString())
+                : 0;
+            
+            const row = worksheet.addRow({
                 codigo: empresa.codigo,
-                status: 'Concluído',
+                competencia: formatarCompetencia(competenciaAtual),
+                status: getNomeStatus(fechamento.status),
                 dataInicio: fechamento.dataInicio ? formatarData(fechamento.dataInicio) : '-',
-                dataConclusao: formatarData(fechamento.dataConclusao),
-                competencia: formatarCompetencia(competenciaAtual)
+                dataConclusao: fechamento.dataConclusao ? formatarData(fechamento.dataConclusao) : '-',
+                dias: dias || '-',
+                observacoes: fechamento.observacoes || '-'
+            });
+            
+            // Colorir linha baseado no status
+            const cor = fechamento.status === 'concluido' ? 'FFD4EDDA' 
+                      : fechamento.status === 'em-andamento' ? 'FFFFEAA7' 
+                      : 'FFFEE';
+            
+            row.eachCell((cell) => {
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: cor }
+                };
             });
         }
     });
     
-    if (empresasConcluidas.length === 0) {
-        alert('Nenhuma empresa concluída para exportar');
-        return;
-    }
-    
-    // Criar CSV
-    let csv = 'Código,Status,Data Início,Data Conclusão,Competência\n';
-    empresasConcluidas.forEach(e => {
-        csv += `${e.codigo},${e.status},${e.dataInicio},${e.dataConclusao},${e.competencia}\n`;
+    // Adicionar bordas
+    worksheet.eachRow((row, rowNumber) => {
+        row.eachCell((cell) => {
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+        });
     });
     
-    // Download
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    // Gerar arquivo
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `fechamento-${competenciaAtual}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
+    link.href = url;
+    link.download = `Fechamento_${formatarCompetencia(competenciaAtual).replace('/', '-')}.xlsx`;
     link.click();
-    document.body.removeChild(link);
-}
-
-// ===================================
-// COMPETÊNCIAS
-// ===================================
-
-function carregarCompetencias() {
-    const select = document.getElementById('competencia');
-    select.innerHTML = '';
+    window.URL.revokeObjectURL(url);
     
-    const dataAtual = new Date();
-    const anoAtual = dataAtual.getFullYear();
-    
-    for (let i = 0; i < 12; i++) {
-        const data = new Date(anoAtual, dataAtual.getMonth() - i, 1);
-        const mes = data.getMonth() + 1;
-        const ano = data.getFullYear();
-        const valor = `${ano}-${mes.toString().padStart(2, '0')}`;
-        const texto = formatarCompetencia(valor);
-        
-        const option = document.createElement('option');
-        option.value = valor;
-        option.textContent = texto;
-        select.appendChild(option);
-    }
+    alert('Excel exportado com sucesso!');
 }
 
 // ===================================
 // UTILITÁRIOS
 // ===================================
 
-function salvarDados() {
-    localStorage.setItem('empresas', JSON.stringify(empresas));
-    localStorage.setItem('fechamentos', JSON.stringify(fechamentos));
-}
-
 function formatarData(dataISO) {
+    if (!dataISO) return '-';
     const data = new Date(dataISO);
     return data.toLocaleDateString('pt-BR');
 }
 
 function formatarCompetencia(competencia) {
     const [ano, mes] = competencia.split('-');
-    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    return `${meses[parseInt(mes) - 1]}/${ano}`;
+    return `${getNomeMes(parseInt(mes))}/${ano}`;
+}
+
+function getNomeMes(mes) {
+    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
+                   'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    return meses[mes - 1];
 }
 
 function getNomeStatus(status) {
@@ -325,39 +658,44 @@ function getNomeStatus(status) {
     return nomes[status] || status;
 }
 
+function calcularDiasDecorridos(dataInicio, dataFim) {
+    const inicio = new Date(dataInicio);
+    const fim = new Date(dataFim);
+    const diff = fim - inicio;
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
 // ===================================
-// MODALS
+// EVENTOS DE TECLADO
 // ===================================
 
-function abrirModalEmpresa() {
-    document.getElementById('modalEmpresa').style.display = 'block';
-    document.getElementById('codigoEmpresa').focus();
-}
-
-function fecharModalEmpresa() {
-    document.getElementById('modalEmpresa').style.display = 'none';
-}
-
-function fecharGerenciarEmpresas() {
-    document.getElementById('modalGerenciar').style.display = 'none';
-}
+document.addEventListener('keydown', (e) => {
+    // ESC para fechar modais
+    if (e.key === 'Escape') {
+        fecharModalNovaEmpresa();
+        fecharModalEditarEmpresa();
+        if (document.getElementById('sidebar').classList.contains('active')) {
+            toggleMenu();
+        }
+    }
+    
+    // Enter para adicionar empresa
+    if (e.key === 'Enter') {
+        if (document.getElementById('modalNovaEmpresa').style.display === 'block') {
+            adicionarEmpresa();
+        }
+    }
+});
 
 // Fechar modal ao clicar fora
 window.onclick = function(event) {
-    const modalEmpresa = document.getElementById('modalEmpresa');
-    const modalGerenciar = document.getElementById('modalGerenciar');
+    const modalNova = document.getElementById('modalNovaEmpresa');
+    const modalEditar = document.getElementById('modalEditarEmpresa');
     
-    if (event.target === modalEmpresa) {
-        fecharModalEmpresa();
+    if (event.target === modalNova) {
+        fecharModalNovaEmpresa();
     }
-    if (event.target === modalGerenciar) {
-        fecharGerenciarEmpresas();
+    if (event.target === modalEditar) {
+        fecharModalEditarEmpresa();
     }
 }
-
-// Enter para adicionar empresa
-document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && document.getElementById('modalEmpresa').style.display === 'block') {
-        adicionarEmpresa();
-    }
-});
